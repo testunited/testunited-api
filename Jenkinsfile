@@ -13,7 +13,12 @@ pipeline {
         }
         stage('Package') { 
             steps {
-                sh "gradle jar docker"
+                sh "gradle jar"
+            }
+        }
+        stage('Publish') { 
+            steps {
+                sh "gradle publishToMaven"
             }
         }
     }
