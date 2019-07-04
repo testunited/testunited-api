@@ -18,7 +18,7 @@ pipeline {
         }
         stage('Publish') { 
             steps {
-                sh "gradle publishToMaven"
+                sh "gradle publish"
             }
         }
     }
