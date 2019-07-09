@@ -2,29 +2,32 @@ package org.testunited.api;
 
 import java.net.URL;
 import java.util.Properties;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestBundlePropertyReader {
 	Properties prop = new Properties();
 	static final String FILE_PREFIX = "testbundle";
 	static final String FILE_SUFFIX = ".properties";
-	
-	Logger logger = Logger.getLogger(getClass().getName());
+	static final String PROFILE_KEY = "testunited.profiles.active";
+	String activeProfile;
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	private void loadFile(Class<?> consumer, String env) throws Exception {
+	private void loadFile(Class<?> consumer, String profile) throws Exception {
 		
-		String envQualifier;
+		String profileQualifier;
 		
-		if(env == null || env == "") {
-			System.out.printf("Loading default property file for \'%s\'\n", consumer.getName());
-			envQualifier = "";
+		if(profile == null || profile == "") {
+			logger.info("Loading default property file for \'{}\'\n", consumer.getName());
+			profileQualifier = "";
 		}
 		else {
-			System.out.printf("Loading env specific [%s] property file for \'%s\'\n", env , consumer.getName());
-			envQualifier = "." + env;
+			logger.info("Loading env specific [{}] property file for \'{}\'\n", profile , consumer.getName());
+			profileQualifier = "." + profile;
 		}
 		
-		String propFileName = FILE_PREFIX + envQualifier + FILE_SUFFIX;
+		String propFileName = FILE_PREFIX + profileQualifier + FILE_SUFFIX;
 
 		URL file = new URL("jar:" + consumer.getProtectionDomain().getCodeSource().getLocation().toString() + "!/"
 				+ propFileName);
@@ -36,35 +39,52 @@ public class TestBundlePropertyReader {
 			inputStream.close();
 		}
 		
-		System.out.println("-----------PROPERTIES------------");
-		for(var p:prop.keySet()) System.out.printf("\t%s:%s\n",p, prop.get(p));
-		System.out.println("---------------------------------");
+		if(logger.isDebugEnabled()) {
+			StringBuilder builder = new StringBuilder();
+			builder.append("\n-----------PROPERTIES------------\n");
+			for (var p : prop.keySet())
+				builder.append(String.format("\t%s:%s\n", p, prop.get(p)));
+			builder.append("\n---------------------------------\n");
+			logger.debug(builder.toString());
+		}
 	}
 
 	public TestBundlePropertyReader(Class<?> consumer) {
 		
+		this.activeProfile = System.getProperty(PROFILE_KEY);
+		
 		try {
 			this.loadFile(consumer, null);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.info("Default property file not found for {}.", consumer.getName());
+			
+			if(logger.isDebugEnabled()) {
+				e.printStackTrace();
+			}
 		}
 		
-		if(System.getProperty("env") != null) {
+		if(this.activeProfile != null) {
 			try {
-				this.loadFile(consumer, System.getProperty("env"));
+				this.loadFile(consumer, this.activeProfile);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.info("Environment specific [{}] property file not found for {}.", consumer.getName());
+				
+				if(logger.isDebugEnabled()) {
+					e.printStackTrace();
+				}
 			}
 		}
 		
 		prop.putAll(System.getenv());
 
-		System.out.println("-----------PROPERTIES WITH ENV------------");
-		for (var p : prop.keySet())
-			System.out.printf("\t%s:%s\n", p, prop.get(p));
-		System.out.println("---------------------------------");
+		if(logger.isDebugEnabled()) {
+			StringBuilder builder = new StringBuilder();
+			builder.append("\n-----------PROPERTIES WITH ENV------------\n");
+			for (var p : prop.keySet())
+				builder.append(String.format("\t%s:%s\n", p, prop.get(p)));
+			builder.append("\n---------------------------------\n");
+			logger.debug(builder.toString());
+		}
 
 	}
 

@@ -16,26 +16,29 @@ import org.junit.platform.engine.reporting.ReportEntry;
 import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestIdentifier;
 import org.junit.platform.launcher.TestPlan;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class TestUnitedTestExecutionListener implements TestExecutionListener {
-	
+
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 	List<TestResult> tests = new ArrayList<TestResult>();
 
 	@Override
-	public void executionFinished(TestIdentifier testIdentifier, TestExecutionResult testExecutionResult) {		
+	public void executionFinished(TestIdentifier testIdentifier, TestExecutionResult testExecutionResult) {
 		if (testIdentifier.isTest()) {
 			boolean isSuccessful = (testExecutionResult.getStatus() == Status.SUCCESSFUL);
-			
+
 			String reason = "";
 			if (testExecutionResult.getThrowable().isPresent()) {
-				reason = testExecutionResult.getThrowable().get().getMessage()
-						.replaceAll("\n", "").replaceAll("\'","");
+				reason = testExecutionResult.getThrowable().get().getMessage().replaceAll("\n", "").replaceAll("\'",
+						"");
 			}
-			
+
 			String suite = "";
 			String separator = "class:";
 			if (testIdentifier.getParentId().isPresent()) {
@@ -65,53 +68,63 @@ public class TestUnitedTestExecutionListener implements TestExecutionListener {
 	public void testPlanExecutionFinished(TestPlan testPlan) {
 
 		StringBuilder payloadBuilder = new StringBuilder();
-//		payloadBuilder.append("[");
-//
-//		for(int i=0;i< this.tests.size();i++) {
-//			payloadBuilder.append(this.tests.get(i).toJson());
-//			
-//			if(i < this.tests.size() - 1)
-//				payloadBuilder.append(",");
-//		}
-//
-//		payloadBuilder.append("]");
 		ObjectMapper mapper = new ObjectMapper();
 
 		try {
 			payloadBuilder.append(mapper.writeValueAsString(this.tests));
-		} catch (JsonProcessingException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		} catch (JsonProcessingException e) {
+			logger.info("JSON processing failed for the test results.");
+
+			if (logger.isDebugEnabled()) {
+				e.printStackTrace();
+			}
 		}
 
 		HttpClient httpclient = HttpClients.createDefault();
 		String payload = payloadBuilder.toString();
 		StringEntity requestEntity = new StringEntity(payload, ContentType.APPLICATION_JSON);
-		
-		mapper.enable(SerializationFeature.INDENT_OUTPUT);
-		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-		try {
-			String formattedPayload = mapper.writeValueAsString(this.tests);
-			System.out.println("----------TESTUNITED PAYLOAD------------");
-			System.out.println(formattedPayload);
-			System.out.println("----------------------------------------");
-			
-		} catch (JsonProcessingException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		if (logger.isDebugEnabled()) {
+			mapper.enable(SerializationFeature.INDENT_OUTPUT);
+			mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+			try {
+				String formattedPayload = mapper.writeValueAsString(this.tests);
+				StringBuilder debugMsgBuilder = new StringBuilder();
+				debugMsgBuilder.append("\n----------TESTUNITED PAYLOAD------------\n");
+				debugMsgBuilder.append(formattedPayload);
+				debugMsgBuilder.append("\n----------------------------------------\n");
+				logger.debug(debugMsgBuilder.toString());
+
+			} catch (JsonProcessingException e) {
+				logger.debug("JSON processing failed for the test results.");
+				e.printStackTrace();
+			}
 		}
 
-		HttpPost postMethod = new HttpPost(PropertyReader.getPropValue("testunited.service.url") + "/testresults/bulk");
+		String testunited_endpoint = PropertyReader.getPropValue("testunited.service.url") + "/testresults/bulk";
+		HttpPost postMethod = new HttpPost(testunited_endpoint);
 		postMethod.setEntity(requestEntity);
 		HttpResponse rawResponse = null;
 
 		try {
+			logger.info("Posting test results to {}.", testunited_endpoint);
 			rawResponse = httpclient.execute(postMethod);
-			System.out.println(rawResponse.getStatusLine());
-			HttpEntity entity2 = rawResponse.getEntity();
-			EntityUtils.consume(entity2);
+
+			int http_status_expected = 201;
+
+			if (rawResponse.getStatusLine().getStatusCode() == http_status_expected) {
+				logger.info("SUCCESSFUL: Posting test results to {}.", testunited_endpoint);
+			} else {
+				logger.error("FAILED: Posting test results to {}. \n HTTP_STATUS:{}\n{}", testunited_endpoint,
+						rawResponse.getStatusLine().getStatusCode(), rawResponse.getStatusLine().getReasonPhrase());
+			}
+
+			HttpEntity entity = rawResponse.getEntity();
+			EntityUtils.consume(entity);
+
 		} catch (Exception e) {
+			logger.error("FAILED: Posting test results to {}.", testunited_endpoint);
 			e.printStackTrace();
 		} finally {
 		}
