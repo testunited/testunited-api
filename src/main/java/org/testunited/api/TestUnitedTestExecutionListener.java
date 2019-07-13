@@ -67,7 +67,10 @@ public class TestUnitedTestExecutionListener implements TestExecutionListener {
 	@Override
 	public void testPlanExecutionFinished(TestPlan testPlan) {
 
-		String testunited_service_url = PropertyReader.getPropValue("testunited.service.url");
+		String testunited_service_url = PropertyReader.getPropValue("TESTUNITED_SERVICE_URL");
+
+		if(testunited_service_url == null || testunited_service_url.isEmpty())
+			PropertyReader.getPropValue("testunited.service.url");
 		
 		if(testunited_service_url == null || testunited_service_url.isEmpty()) {
 			logger.info("TestUnited endpoint is not provided, hence exiting.");
