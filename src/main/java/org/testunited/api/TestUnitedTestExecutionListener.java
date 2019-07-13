@@ -67,9 +67,9 @@ public class TestUnitedTestExecutionListener implements TestExecutionListener {
 	@Override
 	public void testPlanExecutionFinished(TestPlan testPlan) {
 
-		String testunited_endpoint = PropertyReader.getPropValue("testunited.service.url") + "/testresults/bulk";
+		String testunited_service_url = PropertyReader.getPropValue("testunited.service.url");
 		
-		if(testunited_endpoint == null || testunited_endpoint.isEmpty()) {
+		if(testunited_service_url == null || testunited_service_url.isEmpty()) {
 			logger.info("TestUnited endpoint is not provided, hence exiting.");
 			return;
 		}
@@ -109,6 +109,7 @@ public class TestUnitedTestExecutionListener implements TestExecutionListener {
 			}
 		}
 
+		String testunited_endpoint =  testunited_service_url + "/testresults/bulk";
 		HttpPost postMethod = new HttpPost(testunited_endpoint);
 		postMethod.setEntity(requestEntity);
 		HttpResponse rawResponse = null;
