@@ -24,10 +24,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class TestUnitedTestExecutionListener implements TestExecutionListener {
-
+	
 	private final Logger logger = LoggerFactory.getLogger(getClass());
+	private static final String SESSION_ID_KEY = "testunited.testsession.id";
+	private static final String RESULT_SUBMISSION_ROUTE = "/testresultsubmissions";
+	TestResultSubmission submission = new TestResultSubmission();
 	List<TestResult> tests = new ArrayList<TestResult>();
 
+	@Override
+	public void testPlanExecutionStarted(TestPlan testPlan) {
+		this.submission.setSession(System.getProperty(SESSION_ID_KEY));
+	}
+	
 	@Override
 	public void executionFinished(TestIdentifier testIdentifier, TestExecutionResult testExecutionResult) {
 		if (testIdentifier.isTest()) {
@@ -77,11 +85,13 @@ public class TestUnitedTestExecutionListener implements TestExecutionListener {
 			return;
 		}
 		
+		this.submission.setTestResults(this.tests);
+		
 		StringBuilder payloadBuilder = new StringBuilder();
 		ObjectMapper mapper = new ObjectMapper();
 
 		try {
-			payloadBuilder.append(mapper.writeValueAsString(this.tests));
+			payloadBuilder.append(mapper.writeValueAsString(this.submission));
 		} catch (JsonProcessingException e) {
 			logger.info("JSON processing failed for the test results.");
 
@@ -99,7 +109,7 @@ public class TestUnitedTestExecutionListener implements TestExecutionListener {
 			mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
 			try {
-				String formattedPayload = mapper.writeValueAsString(this.tests);
+				String formattedPayload = mapper.writeValueAsString(this.submission);
 				StringBuilder debugMsgBuilder = new StringBuilder();
 				debugMsgBuilder.append("\n----------TESTUNITED PAYLOAD------------\n");
 				debugMsgBuilder.append(formattedPayload);
@@ -112,7 +122,7 @@ public class TestUnitedTestExecutionListener implements TestExecutionListener {
 			}
 		}
 
-		String testunited_endpoint =  testunited_service_url + "/testresults/bulk";
+		String testunited_endpoint =  testunited_service_url + RESULT_SUBMISSION_ROUTE;
 		HttpPost postMethod = new HttpPost(testunited_endpoint);
 		postMethod.setEntity(requestEntity);
 		HttpResponse rawResponse = null;
