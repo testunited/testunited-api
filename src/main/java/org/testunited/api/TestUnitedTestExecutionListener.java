@@ -33,7 +33,11 @@ public class TestUnitedTestExecutionListener implements TestExecutionListener {
 
 	@Override
 	public void testPlanExecutionStarted(TestPlan testPlan) {
-		this.submission.setSession(System.getProperty(SESSION_ID_KEY));
+		String session = System.getProperty(SESSION_ID_KEY);
+		
+		logger.debug("TESTUNITED_TESTSESSION_ID: {}", session);
+		
+		this.submission.setSession(session);
 	}
 	
 	@Override
@@ -84,6 +88,8 @@ public class TestUnitedTestExecutionListener implements TestExecutionListener {
 			logger.info("TestUnited endpoint is not provided, hence exiting.");
 			return;
 		}
+		
+		logger.debug("TESTUNITED_SERVICE_URL: {}", testunited_service_url);
 		
 		this.submission.setTestResults(this.tests);
 		
