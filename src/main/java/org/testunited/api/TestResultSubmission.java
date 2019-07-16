@@ -3,12 +3,12 @@ package org.testunited.api;
 import java.util.List;
 
 public class TestResultSubmission {
-private String session;
-public String getSession() {
-	return session;
+private String sessionName;
+public String getSessionName() {
+	return sessionName;
 }
-public void setSession(String session) {
-	this.session = session;
+public void setSessionName(String sessionName) {
+	this.sessionName = sessionName;
 }
 public List<TestResult> getTestResults() {
 	return testResults;

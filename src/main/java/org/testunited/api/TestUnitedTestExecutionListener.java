@@ -26,18 +26,14 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 public class TestUnitedTestExecutionListener implements TestExecutionListener {
 	
 	private final Logger logger = LoggerFactory.getLogger(getClass());
-	private static final String SESSION_ID_KEY = "testunited.testsession.id";
+	private static final String SESSION_NAME_KEY = "testunited.testsession.name";
 	private static final String RESULT_SUBMISSION_ROUTE = "/testresultsubmissions";
 	TestResultSubmission submission = new TestResultSubmission();
 	List<TestResult> tests = new ArrayList<TestResult>();
 
 	@Override
 	public void testPlanExecutionStarted(TestPlan testPlan) {
-		String session = System.getProperty(SESSION_ID_KEY);
-		
-		logger.debug("TESTUNITED_TESTSESSION_ID: {}", session);
-		
-		this.submission.setSession(session);
+		this.submission.setSessionName(System.getProperty(SESSION_NAME_KEY));
 	}
 	
 	@Override
