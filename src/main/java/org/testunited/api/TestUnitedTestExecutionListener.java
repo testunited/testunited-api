@@ -24,18 +24,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class TestUnitedTestExecutionListener implements TestExecutionListener {
-	
+
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	private static final String SESSION_NAME_KEY = "testunited.testsession.name";
 	private static final String RESULT_SUBMISSION_ROUTE = "/testresultsubmissions";
 	TestResultSubmission submission = new TestResultSubmission();
+	private TestResultSubmissionSummary summary = new TestResultSubmissionSummary();
 	List<TestResult> tests = new ArrayList<TestResult>();
-
+	
+	public TestResultSubmissionSummary getSummary() {
+		return this.summary;
+	}
 	@Override
 	public void testPlanExecutionStarted(TestPlan testPlan) {
 		this.submission.setSessionName(System.getProperty(SESSION_NAME_KEY));
 	}
-	
+
 	@Override
 	public void executionFinished(TestIdentifier testIdentifier, TestExecutionResult testExecutionResult) {
 		if (testIdentifier.isTest()) {
@@ -77,18 +81,18 @@ public class TestUnitedTestExecutionListener implements TestExecutionListener {
 
 		String testunited_service_url = PropertyReader.getPropValue("TESTUNITED_SERVICE_URL");
 
-		if(testunited_service_url == null || testunited_service_url.isEmpty())
+		if (testunited_service_url == null || testunited_service_url.isEmpty())
 			testunited_service_url = PropertyReader.getPropValue("testunited.service.url");
-		
-		if(testunited_service_url == null || testunited_service_url.isEmpty()) {
+
+		if (testunited_service_url == null || testunited_service_url.isEmpty()) {
 			logger.info("TestUnited endpoint is not provided, hence exiting.");
 			return;
 		}
-		
+
 		logger.debug("TESTUNITED_SERVICE_URL: {}", testunited_service_url);
-		
+
 		this.submission.setTestResults(this.tests);
-		
+
 		StringBuilder payloadBuilder = new StringBuilder();
 		ObjectMapper mapper = new ObjectMapper();
 
@@ -124,7 +128,7 @@ public class TestUnitedTestExecutionListener implements TestExecutionListener {
 			}
 		}
 
-		String testunited_endpoint =  testunited_service_url + RESULT_SUBMISSION_ROUTE;
+		String testunited_endpoint = testunited_service_url + RESULT_SUBMISSION_ROUTE;
 		HttpPost postMethod = new HttpPost(testunited_endpoint);
 		postMethod.setEntity(requestEntity);
 		HttpResponse rawResponse = null;
@@ -143,7 +147,26 @@ public class TestUnitedTestExecutionListener implements TestExecutionListener {
 			}
 
 			HttpEntity entity = rawResponse.getEntity();
-			EntityUtils.consume(entity);
+
+			if (entity != null) {
+				String result = EntityUtils.toString(entity);
+
+				if(logger.isDebugEnabled()) {
+					StringBuilder debugMsgBuilder = new StringBuilder();
+					debugMsgBuilder.append("\n------------TEST SUBMISSION SUMMARY------------\n");
+					debugMsgBuilder.append(result);
+					debugMsgBuilder.append("\n-----------------------------------------------\n");
+	
+					logger.debug("------------TEST SUBMISSION SUMMARY------------");
+				}
+				
+				ObjectMapper objectMapper = new ObjectMapper();
+				
+				this.summary = objectMapper.readValue(result, TestResultSubmissionSummary.class);
+
+				logger.info("Submission Summary:{}", summary);
+				EntityUtils.consume(entity);
+			}
 
 		} catch (Exception e) {
 			logger.error("FAILED: Posting test results to {}.", testunited_endpoint);
