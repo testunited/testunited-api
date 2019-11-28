@@ -15,7 +15,10 @@ jobs:
         java-version: 12
     - name: Build with Gradle
       run: ./gradlew build
-    - name: Publish to Github Packages
+      env:
+        DEPS_KEY: ${{ secrets.DEPS_KEY }}
+        DEPS_SECRET: ${{ secrets.DEPS_SECRET }}
+   - name: Publish to Github Packages
       run: ./gradlew publish 
       env:
         DEPS_KEY: ${{ secrets.DEPS_KEY }}
