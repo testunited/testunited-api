@@ -14,7 +14,7 @@ plugins {
 
 
 group 'org.testunited'
-version '0.0.1-SNAPSHOT'
+version '0.0.1'
 
 
 repositories {
@@ -28,17 +28,17 @@ repositories {
 }
 publishing {
 	publications {
-    	mavenJava(MavenPublication) {
+    	gpr(MavenPublication) {
         	from components.java
     	}
 	}
 	repositories {
 	    maven {
-	        name "snapshots"
-	        url "https://repo.deps.co/chamithsri/snapshots"
+	        name "github-packages"
+	        url "https://maven.pkg.github.com/testunited/testunited-api"
 	        credentials {
-	            username "$depsKey"
-	            password "$depsSecret"
+                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("PASSWORD")
 	        }
 	    }
     }
