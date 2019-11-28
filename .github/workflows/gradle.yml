@@ -1,0 +1,22 @@
+name: Java CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up JDK 12
+      uses: actions/setup-java@v1
+      with:
+        java-version: 12
+    - name: Build with Gradle
+      run: ./gradlew build
+    - name: Publish to Github Packages
+      run: ./gradlew publish 
+      env:
+        DEPS_KEY: ${{ secrets.DEPS_KEY }}
+        DEPS_SECRET: ${{ secrets.DEPS_SECRET }}
