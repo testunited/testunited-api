@@ -14,7 +14,7 @@ plugins {
 
 
 group 'org.testunited'
-version '0.0.2'
+version '0.0.3'
 
 
 repositories {
@@ -48,10 +48,10 @@ dependencies {
     api 'org.apache.commons:commons-math3:3.6.1'
 
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
-    implementation 'com.google.guava:guava:26.0-jre'
-	implementation 'org.apache.httpcomponents:httpclient:4.5.3'
-    implementation 'org.junit.jupiter:junit-jupiter-api:5.3.2'
-    implementation 'org.junit.platform:junit-platform-launcher:1.4.2'
+    implementation 'com.google.guava:guava:31.1-jre'
+	implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+    implementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    implementation 'org.junit.platform:junit-platform-launcher:1.8.2'
     implementation 'org.eclipse.aether:aether-api:1.1.0'
     implementation 'org.eclipse.aether:aether-spi:1.1.0'
     implementation 'org.eclipse.aether:aether-util:1.1.0'
@@ -60,11 +60,11 @@ dependencies {
     implementation 'org.eclipse.aether:aether-transport-file:1.1.0'
     implementation 'org.eclipse.aether:aether-transport-http:1.1.0'
     implementation 'org.apache.maven:maven-aether-provider:3.3.9'
-    implementation 'org.apache.maven:maven-model:3.6.1'
-    implementation 'org.junit.jupiter:junit-jupiter-engine:5.3.2'
-    implementation 'org.slf4j:slf4j-api:1.7.25'
-    implementation 'io.rest-assured:rest-assured:4.0.0'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
+    implementation 'org.apache.maven:maven-model:3.8.5'
+    implementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'io.rest-assured:rest-assured:4.5.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2'
     
 }
 
