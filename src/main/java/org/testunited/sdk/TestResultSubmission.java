@@ -1,4 +1,4 @@
-package org.testunited.api;
+package org.testunited.sdk;
 
 import java.util.List;
 
