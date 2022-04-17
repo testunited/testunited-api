@@ -27,6 +27,9 @@ jobs:
         DEPS_SECRET: ${{ secrets.DEPS_SECRET }}
     - name: Test
       run: ./gradlew test
+      env:
+        DEPS_KEY: ${{ secrets.DEPS_KEY }}
+        DEPS_SECRET: ${{ secrets.DEPS_SECRET }}
     - name: Publish to Github Packages
       run: ./gradlew publish 
       env:
